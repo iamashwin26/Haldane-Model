@@ -24,3 +24,10 @@ def get_eigenvalues_for_plot(t, dt):
         k = k + k_step
     return k_array, eigenvalues_array_0, eigenvalues_array_1
 
+
+def main():
+    pass
+
+
+main()
+
