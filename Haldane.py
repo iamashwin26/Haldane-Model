@@ -50,35 +50,28 @@ def get_eigenvalues_for_plot_path():  # its just a scratch, path need to be buil
             kx_array.append(kx)
     return kx_array, ky_array, eigenvalues_array_0, eigenvalues_array_1, energy2d_array
 
+
 def get_eigenvalues_for_plot():
     global a1
     global a2
-    k_array = []  # its vector - array2D
-    energy2d_array_0 = []
-    energy2d_array_1 = []
-
-
+    eigenvalues_array_0 = []
+    eigenvalues_array_1 = []
+    kx_array = []
+    ky_array = []
     ky = -np.pi
-    k_step = 2
+    k_step = 0.1
 
-    for kx in np.arange(-np.pi, np.pi, k_step): # defining grid loop
+    for kx in np.arange(-np.pi, np.pi, k_step):  # defining grid loop
         k1 = np.dot(np.array([kx, ky]), a1)
-        k_array_rows = []
-        eigenvalues_array_0 = []
-        eigenvalues_array_1 = []
         for ky in np.arange(-np.pi, np.pi, k_step):
             k2 = np.dot(np.array([kx, ky]), a2)
 
-            k_array_rows.append(ky)
             eigenvalues_array_0.append(np.linalg.eigh(define_hamiltonian(k1, k2))[0][0])
             eigenvalues_array_1.append(np.linalg.eigh(define_hamiltonian(k1, k2))[0][1])
 
-        k_array.append(k_array_rows)  # its vector - array2D
-        energy2d_array_0.append(eigenvalues_array_0)
-        energy2d_array_1.append(eigenvalues_array_1)
-
-
-    return k_array, eigenvalues_array_0, eigenvalues_array_1, energy2d_array_0, energy2d_array_1
+            ky_array.append(ky)
+            kx_array.append(kx)
+    return kx_array, ky_array, eigenvalues_array_0, eigenvalues_array_1
 
 
 def plot3d(x, y, z1, z2):
@@ -86,8 +79,14 @@ def plot3d(x, y, z1, z2):
     fig = plt.figure()
     ax = plt.axes(projection='3d')
 
-    ax.scatter3D(x, y, z2)
-    ax.scatter3D(x, y, z1)
+    X, Y = np.meshgrid(x, y)
+    Z1 = np.tile(z1, (len(z1), 1))
+    Z2 = np.tile(z2, (len(z2), 1))
+    ax.plot_surface(X, Y, Z1, cmap='ocean')
+    ax.plot_surface(X, Y, Z2, cmap='ocean')
+
+    # ax.scatter3D(x, y, z1)
+    # ax.scatter3D(x, y, z2)
 
     ax.set_xlabel('$\k_x')
     ax.set_ylabel('y')
@@ -95,44 +94,8 @@ def plot3d(x, y, z1, z2):
     plt.show()
 
 
-def plot_testing(x, y, z1, z2, Z):
-    fig = plt.figure()
-    ax = plt.axes(projection='3d')
-    X, Y = np.meshgrid(x, y)
-    print(X)
-    ax.plot_surface(X, Y, Z, rstride=1, cstride=1,
-                    cmap='viridis', edgecolor='none')
-    plt.show()
-
-
-def f(x, y):
-    return x + y
-
-
-def test():
-
-    x = np.linspace(-6, 6, 3)
-    y = np.linspace(-6, 6, 3)
-    print(x)
-    print(x[0,:])
-    temp = np.transpose(x)
-    print(temp)
-    print(temp[:, 0])
-
-    # X, Y = np.meshgrid(x, y)
-    # Z = f(X, Y)
-    # print('co to Z', Z)
-    # print('co to Y', Y)
-    # print('co to X', X)
-    ax = plt.axes(projection='3d')
-    ax.plot_surface(X, Y, Z, rstride=1, cstride=1,
-                    cmap='viridis', edgecolor='none')
-    plt.show()
-
-
 def main():
-    # plot_testing(get_eigenvalues_for_plot()[0], get_eigenvalues_for_plot()[1], get_eigenvalues_for_plot()[2], get_eigenvalues_for_plot()[3], get_eigenvalues_for_plot()[4])
-    test()
+    plot3d(get_eigenvalues_for_plot()[0], get_eigenvalues_for_plot()[1], get_eigenvalues_for_plot()[2], get_eigenvalues_for_plot()[3])
 
 
 main()
