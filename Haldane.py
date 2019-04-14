@@ -28,7 +28,7 @@ def define_hamiltonian(k1, k2):
     return hamiltonian
 
 
-def get_eigenvalues_for_plot():
+def get_eigenvalues_for_plot_path():  # its just a scratch, path need to be build from zero
     global a1
     global a2
     eigenvalues_array_0 = []
@@ -38,7 +38,7 @@ def get_eigenvalues_for_plot():
     ky = -np.pi
     k_step = 2
 
-    for kx in np.arange(-np.pi, np.pi, k_step): # defining grid loop
+    for kx in np.arange(-np.pi, np.pi, k_step):  # defining grid loop
         k1 = np.dot(np.array([kx, ky]), a1)
         for ky in np.arange(-np.pi, np.pi, k_step):
             k2 = np.dot(np.array([kx, ky]), a2)
@@ -49,6 +49,36 @@ def get_eigenvalues_for_plot():
             ky_array.append(ky)
             kx_array.append(kx)
     return kx_array, ky_array, eigenvalues_array_0, eigenvalues_array_1, energy2d_array
+
+def get_eigenvalues_for_plot():
+    global a1
+    global a2
+    k_array = []  # its vector - array2D
+    energy2d_array_0 = []
+    energy2d_array_1 = []
+
+
+    ky = -np.pi
+    k_step = 2
+
+    for kx in np.arange(-np.pi, np.pi, k_step): # defining grid loop
+        k1 = np.dot(np.array([kx, ky]), a1)
+        k_array_rows = []
+        eigenvalues_array_0 = []
+        eigenvalues_array_1 = []
+        for ky in np.arange(-np.pi, np.pi, k_step):
+            k2 = np.dot(np.array([kx, ky]), a2)
+
+            k_array_rows.append(ky)
+            eigenvalues_array_0.append(np.linalg.eigh(define_hamiltonian(k1, k2))[0][0])
+            eigenvalues_array_1.append(np.linalg.eigh(define_hamiltonian(k1, k2))[0][1])
+
+        k_array.append(k_array_rows)  # its vector - array2D
+        energy2d_array_0.append(eigenvalues_array_0)
+        energy2d_array_1.append(eigenvalues_array_1)
+
+
+    return k_array, eigenvalues_array_0, eigenvalues_array_1, energy2d_array_0, energy2d_array_1
 
 
 def plot3d(x, y, z1, z2):
@@ -83,28 +113,22 @@ def test():
 
     x = np.linspace(-6, 6, 3)
     y = np.linspace(-6, 6, 3)
+    print(x)
+    print(x[0,:])
+    temp = np.transpose(x)
+    print(temp)
+    print(temp[:, 0])
 
-    X, Y = np.meshgrid(x, y)
-    Z = f(X, Y)
-    print('co to Z', Z)
-    print('co to Y', Y)
-    print('co to X', X)
+    # X, Y = np.meshgrid(x, y)
+    # Z = f(X, Y)
+    # print('co to Z', Z)
+    # print('co to Y', Y)
+    # print('co to X', X)
     ax = plt.axes(projection='3d')
     ax.plot_surface(X, Y, Z, rstride=1, cstride=1,
                     cmap='viridis', edgecolor='none')
     plt.show()
 
-def make_board(BOARD_LENGTH):
-    spin_array2D = []
-    for i in range(BOARD_LENGTH+1):
-        spin_array2D_rows= []
-        for j in range(BOARD_LENGTH+1):
-            spin = random.randint(0, 1)
-            if spin == 0:
-                spin =- 1
-            spin_array2D_rows.append(spin)
-        spin_array2D.append(spin_array2D_rows)
-    return (spin_array2D)
 
 def main():
     # plot_testing(get_eigenvalues_for_plot()[0], get_eigenvalues_for_plot()[1], get_eigenvalues_for_plot()[2], get_eigenvalues_for_plot()[3], get_eigenvalues_for_plot()[4])
