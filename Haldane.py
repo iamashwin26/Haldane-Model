@@ -20,7 +20,7 @@ class Haldane:
         ba = np.conj(ab)
         aa = self.V + 1j * self.lamb * (-np.exp(1j * (k1 - k2)) + np.exp(1j * k1) - np.exp(1j * k2)
                                         + np.exp(-1j * (k1 - k2)) - np.exp(-1j * k1) + np.exp(-1j * k2))
-        bb = - aa
+        bb = -np.conj(aa)
 
         hamiltonian = np.array([[aa, ab],
                                 [ba, bb]])
@@ -44,15 +44,26 @@ class Haldane:
 
     def draw_plot(self):
         x, y, z1, z2 = self.get_eigenvalues_for_plot()
-        # x, y = np.meshgrid(x, y)
+        #x, y = np.meshgrid(x, y)
 
         ax = plt.axes(projection='3d')
 
         ax.plot_trisurf(x, y, z1)
         ax.plot_trisurf(x, y, z2)
+
+        # z1 = np.tile(z1, (len(z1), 1))
+        # z2 = np.tile(z2, (len(z2), 1))
+        #
+        # ax.plot_surface(x, y, z1)
+        # ax.plot_surface(x, y, z2)
+
         plt.show()
 
 
 if __name__ == '__main__':
-    test = Haldane()
-    test.draw_plot()
+    # test = Haldane()
+    # test.draw_plot()
+
+    x = 1j*3
+    y = np.conj(x)
+    print(x, y)
