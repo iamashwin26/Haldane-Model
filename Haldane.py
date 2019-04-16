@@ -10,7 +10,7 @@ class Haldane:
         self.t = 1
         self.lamb = 0.1
         self.V = 0
-        self.sign = 0  # FOR BERRY PHASE : IF = 0 then negative vector, else: positive
+        self.sign = 1  # FOR BERRY PHASE : IF = 0 then negative vector, else: positive
         self.a1 = 0.5 * np.array([-3 ** 0.5, 3])  # translation vector1 in position domain
         self.a2 = 0.5 * np.array([3 ** 0.5, 3])  # translation vector2 in position domain
 
@@ -30,24 +30,25 @@ class Haldane:
         return hamiltonian
 
     def define_dvector(self, k1, k2):
+        d_temp = np.array([self.t * (1 + np.cos(k1) + np.cos(k2)), self.t * (np.sin(k1) + np.sin(k2)),
+                            self.V - 2 * self.lamb * (np.sin(k1) - np.sin(k2) - np.sin(k1 - k2))])
 
-        return np.array([self.t * (1 + np.cos(k1) + np.cos(k2)), self.t * (np.sin(k1) + np.sin(k2)),
-                         self.V - 2 * self.lamb * (np.sin(k1) - np.sin(k2) - np.sin(k1 - k2))])
+        return d_temp
 
     def get_d_vector_for_plot(self):
         dx, dy, dz = list(), list(), list()
-        k_step = 0.08
+        k_step = 0.05
         for kx in np.arange(-np.pi, np.pi, k_step):
             for ky in np.arange(-np.pi, np.pi, k_step):
                 k1 = np.dot(np.array([kx, ky]), self.a1)
                 k2 = np.dot(np.array([kx, ky]), self.a2)
 
-                dx.append(self.define_dvector(k1, k2)[0])
-                dy.append(self.define_dvector(k1, k2)[1])
-                dz.append(self.define_dvector(k1, k2)[2])
-        print(dz)
-        return dx, dy, dz
+                d_vector = self.define_dvector(k1, k2)
+                dx.append(d_vector[0] / np.linalg.norm(d_vector))
+                dy.append(d_vector[1] / np.linalg.norm(d_vector))
+                dz.append(d_vector[2] / np.linalg.norm(d_vector))
 
+        return dx, dy, dz
 
     def plot_dvector(self):
         label_font_size = 20
@@ -57,7 +58,7 @@ class Haldane:
 
         ax.scatter3D(x, y, z, c=z, cmap='plasma')
 
-        plt.title("D vector, $\lambda$ = 0, V = 0.3", fontsize=label_font_size)
+        plt.title("D vector, $\lambda$ = 0.1, V = 0", fontsize=label_font_size)
         ax.set_xlabel("$d_x$", fontsize=label_font_size)
         ax.set_ylabel("$d_y$", fontsize=label_font_size)
         ax.set_zlabel("$d_z$", fontsize=label_font_size)
@@ -121,9 +122,9 @@ class Haldane:
         ax = plt.axes(projection='3d')
 
         ax.scatter3D(x, y, z1, c=z1, cmap='plasma')
-        ax.scatter3D(x, y, z2, c=z2, cmap='plasma')
+        ax.scatter3D(x, y, z2, c=z2, cmap='plasma_r')
 
-        plt.title("Energy bands in 3D, $\lambda$ = 0, V = 0.3", fontsize=label_font_size)
+        plt.title("Energy bands in 3D, $\lambda$ = 0.1, V = 0", fontsize=label_font_size)
         ax.set_xlabel("$k_x$", fontsize=label_font_size)
         ax.set_ylabel("$k_y$", fontsize=label_font_size)
         ax.set_zlabel("E", fontsize=label_font_size)
@@ -286,5 +287,5 @@ if __name__ == '__main__':
     # test.draw_energy_plot_path()
     # test.plot_berry_curvature3d()
     # test.plot_berry_curvature_path()
-    # print(test.compute_chern_number())
-    test.plot_dvector()
+    print(test.compute_chern_number())
+    # test.plot_dvector()
