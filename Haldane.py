@@ -8,9 +8,9 @@ from mpl_toolkits.mplot3d import Axes3D
 class Haldane:
     def __init__(self):
         self.t = 1
-        self.lamb = 0
-        self.V = 0.3
-        self.sign = 1  # FOR BERRY PHASE : IF = 0 then negative vector, else: positive
+        self.lamb = 0.1
+        self.V = 0
+        self.sign = 0  # FOR BERRY PHASE : IF = 0 then negative vector, else: positive
         self.a1 = 0.5 * np.array([-3 ** 0.5, 3])  # translation vector1 in position domain
         self.a2 = 0.5 * np.array([3 ** 0.5, 3])  # translation vector2 in position domain
 
@@ -21,12 +21,47 @@ class Haldane:
         ba = np.conj(ab)
         aa = self.V + 1j * self.lamb * (-np.exp(1j * (k1 - k2)) + np.exp(1j * k1) - np.exp(1j * k2)
                                         + np.exp(-1j * (k1 - k2)) - np.exp(-1j * k1) + np.exp(-1j * k2))
-        bb = -self.V + self.lamb * (np.exp(1j * (k1 - k2)) + np.exp(1j * k1) - np.exp(1j * k2)
-                                    - np.exp(1j * (k1 - k2)) + np.exp(-1j * k1) - np.exp(-1j * k2))
+        # bb = -self.V + self.lamb * (np.exp(1j * (k1 - k2)) + np.exp(1j * k1) - np.exp(1j * k2)
+        #                             - np.exp(1j * (k1 - k2)) + np.exp(-1j * k1) - np.exp(-1j * k2))
+        bb = -aa
 
         hamiltonian = np.array([[aa, ab],
                                 [ba, bb]])
         return hamiltonian
+
+    def define_dvector(self, k1, k2):
+
+        return np.array([self.t * (1 + np.cos(k1) + np.cos(k2)), self.t * (np.sin(k1) + np.sin(k2)),
+                         self.V - 2 * self.lamb * (np.sin(k1) - np.sin(k2) - np.sin(k1 - k2))])
+
+    def get_d_vector_for_plot(self):
+        dx, dy, dz = list(), list(), list()
+        k_step = 0.08
+        for kx in np.arange(-np.pi, np.pi, k_step):
+            for ky in np.arange(-np.pi, np.pi, k_step):
+                k1 = np.dot(np.array([kx, ky]), self.a1)
+                k2 = np.dot(np.array([kx, ky]), self.a2)
+
+                dx.append(self.define_dvector(k1, k2)[0])
+                dy.append(self.define_dvector(k1, k2)[1])
+                dz.append(self.define_dvector(k1, k2)[2])
+        print(dz)
+        return dx, dy, dz
+
+
+    def plot_dvector(self):
+        label_font_size = 20
+        x, y, z = self.get_d_vector_for_plot()
+
+        ax = plt.axes(projection='3d')
+
+        ax.scatter3D(x, y, z, c=z, cmap='plasma')
+
+        plt.title("D vector, $\lambda$ = 0, V = 0.3", fontsize=label_font_size)
+        ax.set_xlabel("$d_x$", fontsize=label_font_size)
+        ax.set_ylabel("$d_y$", fontsize=label_font_size)
+        ax.set_zlabel("$d_z$", fontsize=label_font_size)
+        plt.show()
 
     def get_eigenvalues_for_plot3d(self):
         eigenvalues_array_0, eigenvalues_array_1, kx_array, ky_array = list(), list(), list(), list()
@@ -132,14 +167,13 @@ class Haldane:
         berry_phase = np.angle(dot_prod12 * dot_prod23 * dot_prod34 * dot_prod41
                                / np.abs(dot_prod12 * dot_prod23 * dot_prod34 * dot_prod41))
 
-        berry_phase /= np.linalg.norm(vec_k1 - vec_k2) * np.linalg.norm(vec_k3 - vec_k4)
-        return berry_phase
+        tmp = berry_phase / np.linalg.norm(vec_k1 - vec_k2) * np.linalg.norm(vec_k3 - vec_k4)
+        return tmp, berry_phase
 
     def get_berry_curvature(self):
         kx_array, ky_array, b_curvature  = list(), list(), list()
 
         k_step = 0.05
-        area_of_loop = k_step ** 2
 
         for kx in np.arange(-np.pi, np.pi, k_step):
             for ky in np.arange(-np.pi, np.pi, k_step):
@@ -148,12 +182,55 @@ class Haldane:
                 vec_k3 = np.array([kx - k_step, ky - k_step])
                 vec_k4 = np.array([kx, ky - k_step])
 
-                b_curvature.append(self.get_berry_phase(vec_k1, vec_k2, vec_k3, vec_k4))
+                b_curvature.append(self.get_berry_phase(vec_k1, vec_k2, vec_k3, vec_k4)[0])
 
                 kx_array.append(kx)
                 ky_array.append(ky)
 
         return kx_array, ky_array, b_curvature
+
+    def get_berry_curvature_path(self):
+        b_curvature, k_array = list(), list()
+        k_step = 0.001
+        k_counter = 0
+        for kx in np.arange(0, 4 * 3**0.5 * np.pi / 9, k_step):
+            ky = 0
+            vec_k1 = np.array([kx, ky])
+            vec_k2 = np.array([kx - k_step, ky])
+            vec_k3 = np.array([kx - k_step, ky - k_step])
+            vec_k4 = np.array([kx, ky - k_step])
+
+            b_curvature.append(self.get_berry_phase(vec_k1, vec_k2, vec_k3, vec_k4))
+
+            k_counter += np.abs(k_step)
+            k_array.append(k_counter)
+
+        for kx in np.arange(4 * 3**0.5 * np.pi / 9, np.pi * 3**0.5 / 3, -k_step):
+            ky = -3**0.5 * kx + 4*np.pi / 3
+
+            vec_k1 = np.array([kx, ky])
+            vec_k2 = np.array([kx - k_step, ky])
+            vec_k3 = np.array([kx - k_step, ky - k_step])
+            vec_k4 = np.array([kx, ky - k_step])
+
+            b_curvature.append(self.get_berry_phase(vec_k1, vec_k2, vec_k3, vec_k4))
+
+            k_counter += np.abs(k_step)
+            k_array.append(k_counter)
+
+        for kx in np.arange(np.pi * 3**0.5 / 3, 0, -k_step):
+            ky = 3**0.5 / 3 * kx
+
+            vec_k1 = np.array([kx, ky])
+            vec_k2 = np.array([kx - k_step, ky])
+            vec_k3 = np.array([kx - k_step, ky - k_step])
+            vec_k4 = np.array([kx, ky - k_step])
+
+            b_curvature.append(self.get_berry_phase(vec_k1, vec_k2, vec_k3, vec_k4))
+
+            k_counter += np.abs(k_step)
+            k_array.append(k_counter)
+        return k_array, b_curvature
 
     def plot_berry_curvature3d(self):
         label_font_size = 20
@@ -161,24 +238,53 @@ class Haldane:
 
         ax = plt.axes(projection='3d')
 
-        ax.scatter3D(x, y, z, c=z, cmap='rainbow')
-        # ax.plot_trisurf(x, y, z)
+        # ax.scatter3D(x, y, z, c=z, cmap='rainbow')
+        ax.plot_trisurf(x, y, z)
 
-        plt.title("Berry curvature", fontsize=label_font_size)
+        plt.title("Berry curvature 3D, $\lambda$ = 0, V = 0.3", fontsize=label_font_size)
         ax.set_xlabel("$k_x$", fontsize=label_font_size)
         ax.set_ylabel("$k_y$", fontsize=label_font_size)
         ax.set_zlabel("$F_{12}^n$", fontsize=label_font_size)
 
         plt.figure(2)
-        temp = np.tile(z, (len(z), 1))
-        im = plt.imshow(np.array(np.transpose(temp)), cmap='rainbow', extent=(-np.pi, np.pi, np.pi, -np.pi),
-                        interpolation='bilinear')
-        plt.colorbar(im)
+        plt.title("Berry curvature 2D, $\lambda$ = 0, V = 0.3")
+        plt.scatter(x, y, c=z, cmap='Greens')
+        plt.colorbar()
         plt.show()
+
+    def plot_berry_curvature_path(self):
+        label_font_size = 20
+        x, y = self.get_berry_curvature_path()
+
+        plt.plot(x, y, 'o', markersize=3, color='red')
+        plt.plot(x, y, 'o', markersize=3, color='red')
+
+        plt.title("Berry curvature in brillouin zone, $\lambda$ = 0, V = 0.3", fontsize=label_font_size)
+        plt.xticks([0, 2.42, 3.03, 4.86], ('$\Gamma$', 'K', 'M', '$\Gamma$'), fontsize=label_font_size)
+        plt.ylabel("$F_{12}^n$", fontsize=label_font_size)
+        plt.show()
+
+    def compute_chern_number(self):
+        k_step = 0.05
+        chern_number = 0
+        for kx in np.arange(-np.pi, np.pi, k_step):
+            for ky in np.arange(-np.pi, np.pi, k_step):
+                vec_k1 = np.array([kx, ky])
+                vec_k2 = np.array([kx - k_step, ky])
+                vec_k3 = np.array([kx - k_step, ky - k_step])
+                vec_k4 = np.array([kx, ky - k_step])
+
+                berry_phase = self.get_berry_phase(vec_k1, vec_k2, vec_k3, vec_k4)[1]
+                chern_number += berry_phase
+        chern_number *= 1 / (2 * np.pi)
+
+        return chern_number
 
 if __name__ == '__main__':
     test = Haldane()
     # test.draw_energy_plot3d()
     # test.draw_energy_plot_path()
-    test.plot_berry_curvature3d()
-
+    # test.plot_berry_curvature3d()
+    # test.plot_berry_curvature_path()
+    # print(test.compute_chern_number())
+    test.plot_dvector()
